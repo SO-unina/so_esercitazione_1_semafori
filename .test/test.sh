@@ -29,14 +29,15 @@ failure() {
 
 failure_analyze_ai() {
 
-    BINARY="$1"
+	BINARY="$1"
+	RUN_TIME_ERR_AI_ANALYZER=../.test/run_time_error_analyzer_ai.sh
 
-    # Detect all .c files used to build the binary
+	# Detect all .c files used to build the binary
 
-    make clean
-    CSRC_FILES=$(make -n -f "$SOURCEDIR/Makefile" "$BINARY" | grep -oE '[^[:space:]]+\.c' | sort -u)
+	make clean
+    	CSRC_FILES=$(make -n -f "$SOURCEDIR/Makefile" "$BINARY" | grep -oE '[^[:space:]]+\.c' | sort -u)
 
-    echo "CSRC_FILES: $CSRC_FILES"
+    	echo "[DEBUG] CSRC_FILES: $CSRC_FILES"
 
         ALL_SRC=$(mktemp)
 
@@ -46,10 +47,8 @@ failure_analyze_ai() {
                 echo -e "\n\n" >> "$ALL_SRC"
         done
 
-    FEEDBACK+="\n### Analisi automatica del codice sorgente ($BINARY)\n"
-
         TMP_ANALYSIS=$(mktemp)
-        ../.test/run_time_error_analyzer_ai.sh "$ALL_SRC" > "$TMP_ANALYSIS" 2>/dev/null
+        ${RUN_TIME_ERR_AI_ANALYZER} "$ALL_SRC" > "$TMP_ANALYSIS" 2>/dev/null
 
         if [ -s "$TMP_ANALYSIS" ]; then
                 FEEDBACK+="\n### Analisi automatica del codice sorgente ($BINARY)\n"
@@ -103,18 +102,13 @@ function compile_and_run() {
 
     IPC_BEFORE=$(ipcs | grep -c "0x")
 
-    if ! unbuffer timeout $TIMEOUT ./$BINARY > $OUTPUT;
-    then
-        failure "L'esecuzione del programma non termina correttamente"
-    fi
-
-	echo "CHECK $BINARY output compared to $OUTPUT"
+	echo "[DEBUG] CHECK $BINARY output compared to $OUTPUT"
 
         timeout $TIMEOUT stdbuf -oL ./$BINARY > $OUTPUT 2>&1
         STATUS=$?
 
         if [[ $STATUS -ne 0 ]]; then
-            # call AI analyzer on all source files for this binary
+            # call AI analyzer on all source files for this binary to gives hints on fixes
             failure_analyze_ai "$BINARY"
 
             # report failure with exit code
