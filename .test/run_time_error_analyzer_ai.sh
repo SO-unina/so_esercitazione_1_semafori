@@ -11,20 +11,13 @@ fi
 # Make sure we read it exactly as-is
 CODE=$(cat "$SRC_FILE")
 
-JSON=$(jq -n --arg CODE "$CODE" '
-{
-  "model": "gpt-4.1-mini",
-  "messages": [
-    {
-      "role": "system",
-      "content": "
-You are a C static analysis assistant.
+SYSTEM_PROMPT=$'You are a C static analysis assistant.
 
 You will receive multiple source files combined into a single text.
 Each file starts with a line in the format:
 //// FILE: filename.c ////
 
-Your job is to detect ONLY **real, definite, proven programming errors** that would
+Your job is to detect ONLY real, definite, proven programming errors that would
 cause incorrect behavior, undefined behavior, segmentation faults, or compilation errors.
 
 Do NOT report:
@@ -37,9 +30,6 @@ Do NOT report:
 - suggestions
 
 If the code is correct, return EXACTLY:
-
-Error: none
-".test/run_time_error_analyzer_ai.sh" 73L, 1736B                                                                                                            2,0-1         Top
 
 Error: none
 Fix: none
@@ -55,15 +45,20 @@ Never invent errors.
 Never guess.
 Never infer macro definitions beyond what is shown.
 Never suggest changes unless the behavior is CERTAINLY incorrect.
-Do not include anything else."
-    },
-    {
-      "role": "user",
-      "content": $CODE
-    }
-  ]
-}')
+Do not include anything else.'
 
+JSON=$(jq -n \
+  --arg SYSTEM "$SYSTEM_PROMPT" \
+  --arg CODE "$CODE" \
+  '
+{
+  "model": "gpt-4.1-mini",
+  "messages": [
+    { "role": "system", "content": $SYSTEM },
+    { "role": "user",   "content": $CODE }
+  ]
+}
+')
 
 # Call OpenAI API
 RESPONSE=$(curl -s https://api.openai.com/v1/chat/completions \
