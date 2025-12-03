@@ -28,6 +28,8 @@ jobs:
         name: "** Grading and Feedback **"
         id: autograder
         continue-on-error: true
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
 
       # need to parse line endings
       # see https://github.community/t/set-output-truncates-multiline-strings/16852/3

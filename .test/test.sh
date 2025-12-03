@@ -61,11 +61,19 @@ function compile_and_run() {
 
     cd $SOURCEDIR
 
-    if ! make ${MAKE_RULE} >/dev/null;
-    then
-        failure "Non è stato possibile compilare il programma"
-    fi
+    #if ! make ${MAKE_RULE} >/dev/null;
+    #then
+    #    failure "Non è stato possibile compilare il programma"
+    #fi
 
+    if ! make ${MAKE_RULE} > /tmp/compile.log 2>&1;
+    then
+      # Use AI-based error analyzer
+      ANALYSIS=$(.test/error_analyzer_ai.sh /tmp/compile.log)
+
+      # Append AI feedback
+      failure "Non è stato possibile compilare il programma" <(echo -e "$ANALYSIS")
+    fi
 
 
     rm -f $OUTPUT
