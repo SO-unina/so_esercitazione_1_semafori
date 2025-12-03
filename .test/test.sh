@@ -54,7 +54,6 @@ failure_analyze_ai() {
                 FEEDBACK+="\n### Analisi automatica del codice sorgente ($BINARY)\n"
                 FEEDBACK+="$(cat "$TMP_ANALYSIS")\n"
         fi
-
 }
 
 

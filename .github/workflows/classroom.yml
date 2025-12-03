@@ -54,9 +54,9 @@ jobs:
       # fail job if autograder returns failed
       # outcome can be 'success', 'failure', 'cancelled', or 'skipped'
       # trigger fail either on !success or on failure depending on preference
-      - name: check autograder pass fail
-        if: ${{ steps.autograder.outcome != 'success' }}
-        run: exit 1
+      #- name: check autograder pass fail
+      #  if: ${{ steps.autograder.outcome != 'success' }}
+      #  run: exit 1
 
     outputs:
       grading-score: ${{ steps.autograder.outputs.Points }}
@@ -105,6 +105,15 @@ jobs:
               repo: context.repo.repo,
               body: commentBody
             })
+
+  fail-workflow:
+    name: Fail Workflow if Grading Failed
+    runs-on: ubuntu-22.04
+    needs: build
+    if: ${{ needs.build.outputs.grading-score != '5' }} # or any pass condition
+    steps:
+      - name: Fail
+        run: exit 1
 
   # job to build custom status badges
   build-badges:
