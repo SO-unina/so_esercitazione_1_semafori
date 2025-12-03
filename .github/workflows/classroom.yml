@@ -22,6 +22,17 @@ jobs:
       # reset feedback.md contents
       - run: echo "" > $GRADING_FEEDBACK_TEMPFILE_PATH
 
+      - name: Check OpenAI API key
+        run: |
+          if [ -z "$OPENAI_API_KEY" ]; then
+            echo "❌ ERROR: OPENAI_API_KEY is NOT available!"
+            exit 1
+          else
+            echo "✅ OPENAI_API_KEY is available (masked)."
+          fi
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+
       # run grading
       # add id to step so outputs can be referenced
       - uses: education/autograding@v1
