@@ -1,35 +1,69 @@
 #!/bin/bash
 
-LOG="$1"
+SRC_FILE="$1"
 
-# Extract first gcc-style error
-LINE=$(grep -oP '.*error:.*' "$LOG" | head -1)
-
-if [[ -z "$LINE" ]]; then
-    echo ""
-    exit 0
+# Check if the file exists
+if [[ ! -f "$SRC_FILE" ]]; then
+    echo "Source file not found: $SRC_FILE"
+    exit 1
 fi
 
-# Prepare JSON for OpenAI request
-JSON=$(jq -n --arg ERR "$LINE" '
+# Make sure we read it exactly as-is
+CODE=$(cat "$SRC_FILE")
+
+JSON=$(jq -n --arg CODE "$CODE" '
 {
   "model": "gpt-4.1-mini",
   "messages": [
     {
       "role": "system",
-      "content": "You are an analysis assistant for C programming errors. Always answer EXACTLY in this template:
+      "content": "
+You are a C static analysis assistant.
 
-Error: (line of the error and short description of the error)
-Fix: (line to fix and short description of the fix)
+You will receive multiple source files combined into a single text.
+Each file starts with a line in the format:
+//// FILE: filename.c ////
 
-The response MUST NOT include text outside this template."
+Your job is to detect ONLY **real, definite, proven programming errors** that would
+cause incorrect behavior, undefined behavior, segmentation faults, or compilation errors.
+
+Do NOT report:
+- missing includes (if another file includes them)
+- missing return 0 in main
+- style issues
+- warnings
+- best practices
+- speculative or possible issues
+- suggestions
+
+If the code is correct, return EXACTLY:
+
+Error: none
+".test/run_time_error_analyzer_ai.sh" 73L, 1736B                                                                                                            2,0-1         Top
+
+Error: none
+Fix: none
+
+Otherwise follow this template exactly:
+
+Error: (filename.c:line - short real error)
+Fix: (filename.c:line - exact correction)
+
+Do not use the exact line number in the report but use the statement as reference.
+Do not suggest optional modifications to improve the design.
+Never invent errors.
+Never guess.
+Never infer macro definitions beyond what is shown.
+Never suggest changes unless the behavior is CERTAINLY incorrect.
+Do not include anything else."
     },
     {
       "role": "user",
-      "content": $ERR
+      "content": $CODE
     }
   ]
 }')
+
 
 # Call OpenAI API
 RESPONSE=$(curl -s https://api.openai.com/v1/chat/completions \

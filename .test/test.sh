@@ -27,6 +27,38 @@ failure() {
     exit 1
 }
 
+failure_analyze_ai() {
+
+    BINARY="$1"
+
+    # Detect all .c files used to build the binary
+
+    make clean
+    CSRC_FILES=$(make -n -f "$SOURCEDIR/Makefile" "$BINARY" | grep -oE '[^[:space:]]+\.c' | sort -u)
+
+    echo "CSRC_FILES: $CSRC_FILES"
+
+        ALL_SRC=$(mktemp)
+
+        for SRC in $CSRC_FILES; do
+                echo "//// FILE: $SRC ////" >> "$ALL_SRC"
+                cat "$SOURCEDIR/$SRC" >> "$ALL_SRC"
+                echo -e "\n\n" >> "$ALL_SRC"
+        done
+
+    FEEDBACK+="\n### Analisi automatica del codice sorgente ($BINARY)\n"
+
+        TMP_ANALYSIS=$(mktemp)
+        ../.test/run_time_error_analyzer_ai.sh "$ALL_SRC" > "$TMP_ANALYSIS" 2>/dev/null
+
+        if [ -s "$TMP_ANALYSIS" ]; then
+                FEEDBACK+="\n### Analisi automatica del codice sorgente ($BINARY)\n"
+                FEEDBACK+="$(cat "$TMP_ANALYSIS")\n"
+        fi
+
+}
+
+
 format_semgrep_json() {
 
     JSON=$1
@@ -61,20 +93,10 @@ function compile_and_run() {
 
     cd $SOURCEDIR
 
-    #if ! make ${MAKE_RULE} >/dev/null;
-    #then
-    #    failure "Non è stato possibile compilare il programma"
-    #fi
-
-    if ! make ${MAKE_RULE} > /tmp/compile.log 2>&1;
+    if ! make ${MAKE_RULE} >/dev/null;
     then
-      # Use AI-based error analyzer
-      ANALYSIS=$(.test/error_analyzer_ai.sh /tmp/compile.log)
-
-      # Append AI feedback
-      failure "Non è stato possibile compilare il programma" <(echo -e "$ANALYSIS")
+        failure "Non è stato possibile compilare il programma"
     fi
-
 
     rm -f $OUTPUT
     ipcclean
@@ -85,6 +107,19 @@ function compile_and_run() {
     then
         failure "L'esecuzione del programma non termina correttamente"
     fi
+
+	echo "CHECK $BINARY output compared to $OUTPUT"
+
+        timeout $TIMEOUT stdbuf -oL ./$BINARY > $OUTPUT 2>&1
+        STATUS=$?
+
+        if [[ $STATUS -ne 0 ]]; then
+            # call AI analyzer on all source files for this binary
+            failure_analyze_ai "$BINARY"
+
+            # report failure with exit code
+            failure "L'esecuzione del programma non termina correttamente (exit $STATUS)"
+        fi
 
     cd - > /dev/null
 
