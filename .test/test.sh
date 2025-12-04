@@ -51,6 +51,9 @@ failure_analyze_ai() {
         echo "${RUN_TIME_ERR_AI_ANALYZER} \"$ALL_SRC\" > \"$TMP_ANALYSIS\" 2>/dev/null"
         ${RUN_TIME_ERR_AI_ANALYZER} "$ALL_SRC" > "$TMP_ANALYSIS" 2>/dev/null
 
+	echo "cat $TMP_ANALYSIS"
+	cat $TMP_ANALYSIS
+
         if [ -s "$TMP_ANALYSIS" ]; then
                 FEEDBACK+="\n### Analisi automatica del codice sorgente ($BINARY)\n"
                 FEEDBACK+="$(cat "$TMP_ANALYSIS")\n"
