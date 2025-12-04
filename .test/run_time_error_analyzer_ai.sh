@@ -67,4 +67,5 @@ RESPONSE=$(curl -s https://api.openai.com/v1/chat/completions \
   -d "$JSON")
 
 # Extract message content
+echo "[DEBUG] $RESPONSE"
 echo "$RESPONSE" | jq -r '.choices[0].message.content'

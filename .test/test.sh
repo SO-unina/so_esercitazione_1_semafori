@@ -48,6 +48,7 @@ failure_analyze_ai() {
         done
 
         TMP_ANALYSIS=$(mktemp)
+        echo "${RUN_TIME_ERR_AI_ANALYZER} \"$ALL_SRC\" > \"$TMP_ANALYSIS\" 2>/dev/null"
         ${RUN_TIME_ERR_AI_ANALYZER} "$ALL_SRC" > "$TMP_ANALYSIS" 2>/dev/null
 
         if [ -s "$TMP_ANALYSIS" ]; then
