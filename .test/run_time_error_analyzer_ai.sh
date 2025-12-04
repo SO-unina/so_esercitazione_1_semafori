@@ -60,6 +60,8 @@ JSON=$(jq -n \
 }
 ')
 
+echo "[DEBUG] OPENAI_API_KEY: ${OPENAI_API_KEY}"
+
 # Call OpenAI API
 RESPONSE=$(curl -s https://api.openai.com/v1/chat/completions \
   -H "Content-Type: application/json" \

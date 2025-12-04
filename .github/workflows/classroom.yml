@@ -9,6 +9,7 @@ on:
 env:
   FEEDBACK_TEMPLATE_PATH: ".github/templates/feedback.md"
   GRADING_FEEDBACK_TEMPFILE_PATH: "/tmp/feedback.md"
+  OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
 
 jobs:
   build:
