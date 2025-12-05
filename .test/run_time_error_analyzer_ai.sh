@@ -60,14 +60,14 @@ JSON=$(jq -n \
 }
 ')
 
-echo "[DEBUG] OPENAI_API_KEY: ${OPENAI_API_KEY}"
+echo "[DEBUG] AI_KEY: ${AI_KEY}"
 
 # Call OpenAI API
 RESPONSE=$(curl -s https://api.openai.com/v1/chat/completions \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer $OPENAI_API_KEY" \
+  -H "Authorization: Bearer ${AI_KEY}" \
   -d "$JSON")
 
 # Extract message content
-echo "[DEBUG] $RESPONSE"
+echo "[DEBUG] RESPONSE: $RESPONSE"
 echo "$RESPONSE" | jq -r '.choices[0].message.content'
